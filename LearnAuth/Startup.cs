@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using LearnAuth.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.EntityFrameworkCore.InMemory;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace LearnAuth
 {
@@ -16,11 +20,26 @@ namespace LearnAuth
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            // Thiết lập cách xác thực
-            services.AddAuthentication("CookieAuth")
-                .AddCookie("CookieAuth", config=> {
-                config.Cookie.Name = "Nanocell.Cookie";
-                config.LoginPath = "/home/authenticate";
+            // Register DbContext.
+            services.AddDbContext<AppDBContext>(config =>
+            {
+                config.UseInMemoryDatabase("Memory");
+            });
+            // Register Identity using TUser,TRole.
+            services.AddIdentity<IdentityUser, IdentityRole>(options=> {
+                options.Password.RequireDigit = false;
+                options.Password.RequiredLength = 6;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+            })
+                .AddEntityFrameworkStores<AppDBContext>()
+                .AddDefaultTokenProviders();
+
+            services.ConfigureApplicationCookie(config =>
+            {
+                config.Cookie.Name = "Identity.Cookie";
+                config.LoginPath = "/Home/Login";
             });
 
 
